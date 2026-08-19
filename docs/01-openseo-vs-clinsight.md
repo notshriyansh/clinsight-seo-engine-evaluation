@@ -29,7 +29,7 @@ Clinsight and OpenSEO solve different parts of the SEO workflow.
 
 ## What OpenSEO Adds
 
-The most useful OpenSEO capabilities are not its SEO intelligence workflows:
+The most useful OpenSEO capabilities are its SEO intelligence workflows:
 
 - SERP collection
 - Keyword and domain research

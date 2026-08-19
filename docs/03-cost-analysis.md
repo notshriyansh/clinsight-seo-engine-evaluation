@@ -66,15 +66,15 @@ At this point, execution mode, depth, caching, batching and workload design beco
 
 ## Cost Optimization
 
-**1. Use the Cheapest Suitable Execution Mode**:
+### 1. Use the Cheapest Suitable Execution Mode
 
 Scheduled jobs do not necessarily need live execution.
 
-**2. Batch Work**:
+### 2. Batch Work:
 
 Avoid sending individual requests sequentially when the provider supports batching.
 
-**3. Cache Stable Data**
+### 3. Cache Stable Data:
 
 Suitable candidates include:
 

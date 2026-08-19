@@ -10,6 +10,8 @@ The supporting analysis is split into a few focused documents:
 
 - [OpenSEO vs Clinsight](./docs/01-openseo-vs-clinsight.md) - capabiliity comparison and engineering observations
 - [Integration Options](./docs/02-integration-options.md) - direct API integration vs OpenSEO vs forking
+- [Cost Analysis](./docs/03-cost-analysis.md) - usage assumptions and cost optimization
+- [Self-Hosting Analysis](./docs/04-self-hosting-analysis.md) - operational trade-offs and ownership costs
 
 ## Executive Summary
 
@@ -112,248 +114,38 @@ This establishes a single layer to handle:
 
 This abstraction is more important than deciding whether OpenSEO itself becomes a dependency.
 
-## Why DataForSEO?
+### Why DataForSEO?
 
-DataForSEO provides the underlying data required for core SEO capabilities while allowing Clinsight to maintain complete control over its product workflows.
+DataForSEO provides the underlying SEO data while allowing Clinsight to retain ownership of its product workflows.
 
-Consuming raw data via API prevents the need to build and maintain web-scraping infrastructure internally.
+The proposed approach is to consume it through an internal SEO adapter rather than coupling individual product features directly to the provider.
 
-DataForSEO should be the default provider-level integration; OpenSEO should be evaluated selectively as a reusable application/workflow layer. For example, its codebase provides implementations for:
-
-- Business
-
-- Backlinks
-
-- Keywords
-
-- Domain
-
-- SERP
-
-- Labs
-
-- Lighthouse
-
-- AI Search
-
-Its rank-tracking workflow also handles concepts such as:
-
-- Keywords
-
-- Devices
-
-- Locations
-
-- Scheduling
-
-- Task creation and polling
-
-- Cost estimation
-
-- Credit limits
-
-- Snapshots
-
-- Historical results
-
-- Cost Analysis
-  The raw cost of SERP data is relatively low for moderate usage, but scales based on:
-
-- Number of keywords
-
-- Number of tracked devices
-
-- Tracking frequency
-
-- SERP depth
-
-- Execution mode (Standard vs. Live)
-
-- Additional paid parameters
+See [Cost Analysis](./docs/03-cost-analysis.md) for the usage model and cost considerations.
 
 The objective is not to avoid DataForSEO entirely, but to only retrieve fresh data when the product strictly requires it.
 
-DataForSEO SERP Pricing Reference:
-| Mode | Base Cost / 10 Results | Primary Use Case |
-| :--- | :--- | :--- |
-| **Standard** | $0.0006 | Scheduled / batch workloads |
-| **Priority** | $0.0012 | Faster queued workloads |
-| **Live** | $0.0020 | User-requested real-time checks |
+The provider cost scales primarily with keyword count, devices, tracking frequency, SERP depth and execution mode.
 
-Example Projection: Moderate Scale
-100 keywords
-2 devices
-Weekly tracking
-10-result SERPs
+For the detailed workload projections and cost optimization strategy, see [Cost Analysis](./docs/03-cost-analysis.md).
 
-```text
-Total SERPs/year = 100 X 2 X 52 = 10,400
-```
+## Cost Strategy
 
-- Standard: ~$6.24 / year
-- Priority: ~$12.48 / year
-- Live: ~$20.80 / year
+The main cost-control approach is to avoid unnecessary fresh provider requests.
 
-## Example Projection: Large Scale
+This means:
 
-- 1,000 keywords
-- 2 devices
-- Daily tracking
-- 100-result depth
+- Cache suitable non-volatile data
+- Batch provider requests
+- Use queued execution for scheduled workloads
+- Reserve live requests for cases that require fresh data
+- Track provider spend per customer and feature
 
-```text
-Keyword/device checks per year
-= 1,000 × 2 × 365
-= 730,000
+See [Cost Analysis](./docs/03-cost-analysis.md).
 
-At 100-result depth:
-730,000 × 10 pages
-= 7.3M SERP pages/year
-```
+## Proposed Implementation
 
-At this volume, execution mode and caching efficiency become major cost drivers.
-
-## Cost Optimization Strategy
-
-- Execution Routing: Route scheduled background tracking through the standard batch queue, reserving Live requests for explicit user-triggered actions (e.g., "Check my rankings now").
-
-```text
-Scheduled tracking  ──>  Standard queue  ──>  DataForSEO
-```
-
-- Batch Requests: Batch multiple tasks per request instead of firing single-item requests sequentially.
-
-```text
-┌─ keyword 1
-                 ├─ keyword 2
-Clinsight Worker ├─ keyword 3  ──>  DataForSEO
-                 ├─ ...
-                 └─ keyword 100
-```
-
-3. Caching Layer
-   Cache repeated and non-volatile SEO queries in Redis.
-
-```text
-Request ──> Redis Cache ──[HIT]──> Return Cached Data
-                 |
-               [MISS]
-                 v
-             DataForSEO ──> Update Cache ──> Return Fresh Data
-```
-
-- Ideal for caching: Keyword research, competitor discovery, topic generation, content research.
-
-- Bypass caching: Rank tracking scheduled snapshots (every snapshot must represent an accurate, point-in-time observation).
-
-## Freshness-Tiered Invalidation
-
-| Data Type                  | Freshnes Requirement |
-| :------------------------- | :------------------- |
-| Keyword search volume      | Low                  |
-| Keyword ideas              | Low                  |
-| Competitor discovery       | Low / Medium         |
-| Backlinks                  | Medium               |
-| SERP research for articles | Medium               |
-| Scheduled rank tracking    | Scheduled            |
-| "Check now" requests       | High (Live)          |
-| AI visibility              | Feature-dependent    |
-
-## Architecture Boundaries: What Clinsight Owns
-
-```text
-Clinsight Product Engine
-         |
-         v
-    SEO Adapter
-         |
-         v
-   Data Provider (DataForSEO)
-```
-
-Clinsight Product Core:
-
-- Content Intelligence & AI Workflows
-
-- Content Generation & Humanisation
-
-- Research & Source Ingestion
-
-- Publishing & Client Workflows
-
-- Billing, Analytics, & Orchestration
-
-- Externalized (DataForSEO via Adapter):
-
-- Raw SERP scraping & parsing
-
-- Keyword metrics & volume databases
-
-- Backlink indexes & domain lookups
-
-## Implementation Roadmap
-
-Phase 1 — SEO Provider Abstraction :
-
-Create an internal interface defining core SEO operations:
-
-```text
-SEOProvider
-├── searchSERP()
-├── getKeywords()
-├── getBacklinks()
-├── getDomainData()
-└── getCompetitors()
-```
-
-Implement the DataForSEO driver behind this interface.
-
-Phase 2 — Caching & Cost Controls
-Redis caching for static lookups
-
-Request deduplication
-
-Rate limiting & exponential backoff retries
-
-Usage tracking & cost estimation guardrails
-
-Phase 3 — Rank Tracking Pipeline
-Keyword, device, and location configuration models
-
-Scheduled worker jobs
-
-Task dispatch and polling via DataForSEO
-
-Snapshot storage and historical trend analytics
-
-Phase 4 — Product Integration
-Expose SEO intelligence directly to the Clinsight content creation pipeline:
-
-```text
-Keyword Research ──> Content Research ──> AI Content Gen ──> Publishing ──> Rank Tracking ──> Analytics
-```
-
-## Summary
-
-```text
-                    CLINSIGHT
-                        |
-          +-------------+-------------+
-          |                           |
-          v                           v
-   Content Engine              SEO Intelligence
-          |                           |
-          |                      SEO Adapter
-          |                           |
-          |                           v
-          |                       DataForSEO
-          |                           |
-          +─────────────┬─────────────+
-                        |
-                        v
-                 Content Workflow
-```
-
-Prioritize separation of concerns and incremental adoption over replacing a working product with an external monolithic codebase.
-
-OpenSEO offers solid reference patterns, but Clinsight’s core value remains its end-to-end content workflow.
+1. Introduce an internal SEO provider abstraction.
+2. Integrate the highest-value DataForSEO capabilities.
+3. Add caching, batching and cost controls.
+4. Build rank tracking only where the product requires it.
+5. Evaluate OpenSEO selectively if an existing workflow saves substantial engineering effort.

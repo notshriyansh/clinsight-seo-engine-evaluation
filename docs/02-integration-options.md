@@ -109,7 +109,7 @@ A fork should only be considered after identifying a specific OpenSEO workflow t
 - is strategically important,
 - would be expensive to reproduce,
 - cannot be consumed cleanly through an API/service boundary, and
-  -- justifies permanent ownership.
+- justifies permanent ownership.
 
 **Recommended Integration Strategy**
 
