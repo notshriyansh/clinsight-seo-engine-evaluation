@@ -9,6 +9,7 @@ Technical evaluation of whether Clinsight should integrate, self-host, fork, or 
 The supporting analysis is split into a few focused documents:
 
 - [OpenSEO vs Clinsight](./docs/01-openseo-vs-clinsight.md) - capabiliity comparison and engineering observations
+- [Integration Options](./docs/02-integration-options.md) - direct API integration vs OpenSEO vs forking
 
 ## Executive Summary
 
@@ -56,31 +57,6 @@ OpenSEO is stronger in areas such as:
 Replacing Clinsight with OpenSEO would remove a large part of Clinsight's existing product value.
 
 > **Key Architectural Question:** Which SEO capabilities should Clinsight own, and which should it consume from an external provider?
-
----
-
-## Capability Comparison
-
-| Capability              | Clinsight | OpenSEO | Recommendation            |
-| :---------------------- | :-------- | :------ | :------------------------ |
-| **Blog generation**     | Yes       | No      | Keep Clinsight            |
-| **Content research**    | Yes       | Partial | Keep / augment            |
-| **Humanisation**        | Yes       | No      | Keep Clinsight            |
-| **Internal linking**    | Yes       | Limited | Keep Clinsight            |
-| **Image generation**    | Yes       | No      | Keep Clinsight            |
-| **LinkedIn generation** | Yes       | No      | Keep Clinsight            |
-| **Reddit workflows**    | Yes       | No      | Keep Clinsight            |
-| **Keyword research**    | Yes       | Yes     | Evaluate integration      |
-| **SERP data**           | Partial   | Yes     | Use DataForSEO            |
-| **Rank tracking**       | Partial   | Yes     | Integrate / build         |
-| **Backlinks**           | Limited   | Yes     | Candidate for integration |
-| **Competitor analysis** | Partial   | Yes     | Candidate for integration |
-| **AI visibility**       | Yes       | Yes     | Compare implementations   |
-| **Site audit**          | Limited   | Yes     | Candidate for integration |
-| **Scheduling**          | Yes       | Yes     | Keep Clinsight            |
-| **Publishing**          | Yes       | Limited | Keep Clinsight            |
-
----
 
 ## Recommended Architecture
 
