@@ -4,6 +4,12 @@ Technical evaluation of whether Clinsight should integrate, self-host, fork, or 
 
 ---
 
+## Detailed Analysis
+
+The supporting analysis is split into a few focused documents:
+
+- [OpenSEO vs Clinsight](./docs/01-openseo-vs-clinsight.md) - capabiliity comparison and engineering observations
+
 ## Executive Summary
 
 ### Recommendation
